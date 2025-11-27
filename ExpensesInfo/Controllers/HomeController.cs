@@ -20,10 +20,9 @@ namespace ExpensesInfo.Controllers
             return View();
         }
 
-        public IActionResult Expenses(int? typeId)
+        public async Task<IActionResult> Expenses(int? typeId)
         {
-            var types = _context.ExpenseTypes.ToList();
-            ViewBag.Types = types;
+            ViewBag.Types = await _context.ExpenseTypes.ToListAsync();
             ViewBag.SelectedTypeId = typeId;
 
             var query = _context.Expenses
@@ -35,31 +34,31 @@ namespace ExpensesInfo.Controllers
                 query = query.Where(e => e.ExpenseTypeId == typeId.Value);
             }
 
-            var allExpenses = query.ToList();
+            var allExpenses = await query.ToListAsync();
             ViewBag.TotalExpenses = allExpenses.Sum(e => e.Value);
 
             return View(allExpenses);
         }
-        public IActionResult CreateEditExpense(int? id)
+        public async Task<IActionResult> CreateEditExpense(int? id)
         {
-            var types = _context.ExpenseTypes.ToList();
-            ViewBag.Types = types;
+            ViewBag.Types = await _context.ExpenseTypes.ToListAsync();
+           
             if (id == null)
             {
                 return View(new Expense());
             }
-            var expense = _context.Expenses.SingleOrDefault(x => x.Id == id);
+            var expense = await _context.Expenses.SingleOrDefaultAsync(x => x.Id == id);
             if (expense == null) return NotFound();
             return View(expense);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateEditExpenseForm(Expense model)
+        public async Task<IActionResult> CreateEditExpenseForm(Expense model)
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Types = _context.ExpenseTypes.ToList();
+                ViewBag.Types = await _context.ExpenseTypes.ToListAsync();
                 return View("CreateEditExpense", model);
             }
             if (model.Id == 0)
@@ -72,7 +71,7 @@ namespace ExpensesInfo.Controllers
             }
             else
             {
-                var existing = _context.Expenses.SingleOrDefault(x => x.Id == model.Id);
+                var existing = await _context.Expenses.SingleOrDefaultAsync(x => x.Id == model.Id);
                 if (existing == null) return NotFound();
                 existing.Value = model.Value;
                 existing.Description = model.Description;
@@ -80,15 +79,15 @@ namespace ExpensesInfo.Controllers
                 existing.ExpenseTypeId = model.ExpenseTypeId;
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Expenses));
         }
-        public IActionResult DeleteExpense(int id)
+        public async Task<IActionResult> DeleteExpense(int id)
         {
-            var expense = _context.Expenses.SingleOrDefault(x => x.Id == id);
+            var expense = await _context.Expenses.SingleOrDefaultAsync(x => x.Id == id);
             if (expense == null) return NotFound();
             _context.Expenses.Remove(expense);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Expenses));
         }
         public IActionResult Privacy()
